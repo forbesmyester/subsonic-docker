@@ -1,20 +1,41 @@
+# # Run the contents of this to install ansible before hand
+#
+# `sudo apt-get update ; sudo apt-get -y install python-pip python-dev git ; sudo pip install ansible ; sudo mkdir /etc/ansible ; sudo bash -c "echo [audio] >> /etc/ansible/hosts" ; sudo bash -c "echo 127.0.0.1 >> /etc/ansible/hosts" ; ssh -o StrictHostKeyChecking=no git@github.com`
+
 - hosts: localhost
   vars:
-    http_port: 80
-    max_clients: 200
+    http_port: 8080
+    build_root: ~/build_root
   tasks:
-    - apt_key: url=https://packages.elasticsearch.org/GPG-KEY-elasticsearch state=present
-      sudo: true
-    - apt_repository: repo="deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main" state=present
-      sudo: true
+
+    # Build
     - apt: pkg={{ item }} state=present
       with_items:
-      - elasticsearch
+      - maven
       - default-jdk
+      - git
+      - tomcat6
       sudo: true
-    - name: "Set ElasticSearch to start on system startup"
-      shell: update-rc.d elasticsearch defaults 95 10
+    - file: path={{ build_root }} state=directory
+    - git: repo=git://github.com/EugeneKay/subsonic.git version=release dest={{ build_root }}/subsonic
+    - shell: mvn package
+      args:
+        chdir: "{{ build_root }}/subsonic"
+        creates: "{{ build_root }}/subsonic/subsonic-main/target/subsonic.war"
+
+    # Install
+    - file: path={{ item }} state=absent
+      with_items:
+        - /var/lib/tomcat6/webapps/subsonic 
+        - /var/lib/tomcat6/work
+        - /var/subsonic
       sudo: true
-    - name: "Restart ElasticSearch"
-      shell: service elasticsearch restart
+    - file: path={{ item }} state=directory owner=tomcat6 group=tomcat6
+      with_items:
+        - /var/subsonic 
+        - /var/lib/tomcat6/work
+      sudo: true
+    - copy: src="{{ build_root }}/subsonic/subsonic-main/target/subsonic.war" dest=/var/lib/tomcat6/webapps/
+      sudo: true
+    - service: name=tomcat6 state=restarted
       sudo: true
