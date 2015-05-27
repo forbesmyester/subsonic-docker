@@ -14,18 +14,20 @@
     - apt: pkg={{ item }} state=present
       with_items:
       - maven
-      - default-jdk
+      - openjdk-7-jdk
       - git
       - tomcat6
       sudo: true
     - file: path={{ build_root }} state=directory
-    - git: repo=git://github.com/EugeneKay/subsonic.git version=release dest={{ build_root }}/subsonic
+    - git: repo=https://github.com/EugeneKay/subsonic.git version=release dest={{ build_root }}/subsonic
     - shell: mvn package
       args:
         chdir: "{{ build_root }}/subsonic"
         creates: "{{ build_root }}/subsonic/subsonic-main/target/subsonic.war"
 
     # Install
+    - service: name=tomcat6 state=stopped
+      sudo: true
     - file: path={{ item }} state=absent
       with_items:
         - /var/lib/tomcat6/webapps/subsonic 
@@ -39,5 +41,5 @@
       sudo: true
     - copy: src="{{ build_root }}/subsonic/subsonic-main/target/subsonic.war" dest=/var/lib/tomcat6/webapps/
       sudo: true
-    - service: name=tomcat6 state=restarted
-      sudo: true
+    # - service: name=tomcat6 state=restarted
+    #   sudo: true
