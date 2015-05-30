@@ -1,4 +1,0 @@
-#!/bin/sh
-mkdir -p volume-var_subsonic
-docker build -t eugenekay-subsonic-dockerized .
-docker run -v $PWD/volume-var_subsonic:/var/subsonic -v /home/fozz/Markdown/Jukebox:/music:ro -p 8080:8080 eugenekay-subsonic-dockerized /usr/lib/jvm/java-7-openjdk-amd64/bin/java -Djava.util.logging.config.file=/var/lib/tomcat6/conf/logging.properties -Djava.awt.headless=true -Xmx160m -XX:+UseConcMarkSweepGC -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djava.endorsed.dirs=/usr/share/tomcat6/endorsed -classpath /usr/share/tomcat6/bin/bootstrap.jar -Dcatalina.base=/var/lib/tomcat6 -Dcatalina.home=/usr/share/tomcat6 -Djava.io.tmpdir=/tmp/tomcat6-tomcat6-tmp org.apache.catalina.startup.Bootstrap start
