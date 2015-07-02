@@ -11,12 +11,17 @@
   tasks:
 
     # Build
+    - apt_repository: repo="ppa:kirillshkrogalev/ffmpeg-next" update_cache=true
+      sudo: true
     - apt: pkg={{ item }} state=present
       with_items:
       - maven
       - openjdk-7-jdk
       - git
       - tomcat6
+      - ffmpeg
+      sudo: true
+    - user: name=root groups=audio append=yes
       sudo: true
     - file: path={{ build_root }} state=directory
     - git: repo=https://github.com/EugeneKay/subsonic.git version=release dest={{ build_root }}/subsonic
